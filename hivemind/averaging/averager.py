@@ -272,6 +272,8 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
     def _run_internal(self):
         """Serve DecentralizedAverager forever. This function will not return until the averager is shut down"""
+        torch.set_num_threads(1)  # Prevent threading issues
+        torch.manual_seed(0)  # Ensure reproducibility
         loop = switch_to_uvloop()
         # initialize asyncio synchronization primitives in this event loop
 
@@ -677,6 +679,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
         The exact contents of both metadata and tensors are determined by get_current_state method
         """
+        print(f"Entering averager - load_state_from_peers()")
         future = MPFuture()
         self._outer_pipe.send(("_load_state_from_peers", [], dict(timeout=timeout, future=future)))
         return future.result(timeout=timeout) if wait else future
@@ -685,6 +688,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
         if timeout is not None:
             timeout = self.next_chunk_timeout if self.next_chunk_timeout is not None else self.request_timeout
         try:
+            print(f"Entering averager - _load_state_from_peers() impl")
             key_manager = self._matchmaking.group_key_manager
             peer_priority, _ = self.dht.get(f"{key_manager.prefix}.all_averagers", latest=True) or ({}, None)
             peer_priority = {
@@ -695,6 +699,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
             if not isinstance(peer_priority, dict) or len(peer_priority) == 0:
                 logger.info(f"Averager could not load state from peers: peer dict empty or corrupted {peer_priority}")
+                print(f"At line 700 - future.set_result(None)")
                 future.set_result(None)
                 return
 
@@ -702,11 +707,17 @@ class DecentralizedAverager(mp.Process, ServicerBase):
             for peer in sorted(peer_priority.keys(), key=peer_priority.get, reverse=True):
                 if peer != self.peer_id:
                     t0 = time.monotonic()
-                    logger.info(f"Downloading parameters from peer {peer}")
+                    print("Going to sleep for 10 sec - check first peer")
+                    time.sleep(10)
+                    print(f"Downloading parameters from peer {peer}")
                     try:
+                        print(f"Entering _load_state_from_peers() impl - try block")
+                        print("Going to sleep for 10 sec - check first peer")
+                        time.sleep(10)
                         stub = self.get_stub(self._p2p, peer, namespace=self.prefix)
                         stream = await stub.rpc_download_state(averaging_pb2.DownloadRequest())
                         current_tensor_parts, tensors = [], []
+                        print(f"After _load_state_from_peers() impl - rpc_download_state")
 
                         # TODO merge this with hivemind.compression.deserialize_tensor_stream
                         async for message in aiter_with_timeout(stream, timeout=timeout):
@@ -725,7 +736,8 @@ class DecentralizedAverager(mp.Process, ServicerBase):
                             continue
 
                         t1 = time.monotonic()
-                        logger.info(f"Finished downloading state in {t1 - t0:.3f}s from {peer}")
+                        print(f"Finished downloading state in {t1 - t0:.3f}s from {peer}")
+                        print(f"At line 738 - future.set_result((metadata, tensors))")
                         future.set_result((metadata, tensors))
                         return
                     except Exception as e:
@@ -733,6 +745,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
         finally:
             if not future.done():
+                print(f"At line 746 - future.set_result(None)")
                 future.set_result(None)
 
     def get_group_bits(self, wait: bool = True):
