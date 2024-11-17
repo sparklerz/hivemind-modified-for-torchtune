@@ -664,10 +664,6 @@ class TrainingStateAverager(DecentralizedAverager):
         main_parameters_and_extras = tuple(chain(opt_parameters, self.extra_tensors))
         num_parameters_and_extras = len(main_parameters_and_extras)
 
-        print("Parameters:")
-        for i, param in enumerate(opt_parameters):
-            print(f"Parameter {i}: {param}")
-
         loaded_state = super().load_state_from_peers(**kwargs)
         if loaded_state is None:
             return
