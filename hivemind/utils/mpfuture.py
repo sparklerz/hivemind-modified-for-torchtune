@@ -114,8 +114,7 @@ class MPFuture(base.Future, Generic[ResultType]):
     @property
     def _state(self) -> State:
         print(f"Entering setting shared state")
-        #shared_state = ALL_STATES[self._shared_state_code.item()]
-        shared_state = ALL_STATES[self._shared_state_code.numpy()[0]]
+        shared_state = ALL_STATES[self._shared_state_code.item()]
         print(f"After setting shared state - shared_state - ", shared_state)
         return self._state_cache.get(shared_state, shared_state)
 
