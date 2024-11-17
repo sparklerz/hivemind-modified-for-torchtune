@@ -716,21 +716,30 @@ class DecentralizedAverager(mp.Process, ServicerBase):
                         stream = await stub.rpc_download_state(averaging_pb2.DownloadRequest())
                         current_tensor_parts, tensors = [], []
                         print(f"After _load_state_from_peers() impl - rpc_download_state")
+                        print("Going to sleep for 15 sec - check first peer")
+                        time.sleep(15)
 
                         # TODO merge this with hivemind.compression.deserialize_tensor_stream
                         async for message in aiter_with_timeout(stream, timeout=timeout):
+                            print(f"Received new message from stream")
                             if message.metadata:
                                 metadata = self.serializer.loads(message.metadata)
+                                print(f"Metadata received: {metadata}")
                             if message.tensor_part.dtype and current_tensor_parts:
                                 # tensor_part.dtype indicates the start of the new tensor, so we should wrap up this one
+                                print(f"Processing tensor part with dtype: {message.tensor_part.dtype}")
+                                print(f"Current tensor parts count: {len(current_tensor_parts)}")
                                 tensors.append(deserialize_torch_tensor(combine_from_streaming(current_tensor_parts)))
+                                print(f"Added tensor to list. Total tensors: {len(tensors)}")
                                 current_tensor_parts = []
                             current_tensor_parts.append(message.tensor_part)
+                            print(f"Appended new tensor part. Current parts: {len(current_tensor_parts)}")
                         if current_tensor_parts:
                             tensors.append(deserialize_torch_tensor(combine_from_streaming(current_tensor_parts)))
+                            print(f"Final tensor added. Total tensors processed: {len(tensors)}")
 
                         if not metadata:
-                            logger.debug(f"Peer {peer} did not send its state")
+                            print(f"Peer {peer} did not send its state")
                             continue
 
                         t1 = time.monotonic()
@@ -739,7 +748,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
                         future.set_result((metadata, tensors))
                         return
                     except Exception as e:
-                        logger.exception(f"Failed to download state from {peer} - {repr(e)}")
+                        print(f"Failed to download state from {peer} - {repr(e)}")
 
         finally:
             if not future.done():
