@@ -49,13 +49,11 @@ class SharedBytes:
             if cls._pid != os.getpid() or cls._buffer is None or cls._index >= len(cls._buffer):
                 buffer_size = int(os.environ.get("HIVEMIND_SHM_BUFFER_SIZE", 16))
                 cls._pid = os.getpid()
-                #cls._buffer = torch.empty([buffer_size], dtype=torch.uint8).share_memory_()
-                cls._buffer = torch.zeros([buffer_size], dtype=torch.uint8, pin_memory=True).share_memory_()
+                cls._buffer = torch.empty([buffer_size], dtype=torch.uint8).share_memory_()
                 cls._index = 0
 
             cls._index += 1
-            #return cls._buffer[cls._index - 1]
-            return cls._buffer[cls._index - 1].clone()  # Return a clone to avoid sharing issues
+            return cls._buffer[cls._index - 1]
 
 class UpdateType(Enum):
     RESULT = auto()
@@ -113,9 +111,9 @@ class MPFuture(base.Future, Generic[ResultType]):
 
     @property
     def _state(self) -> State:
-        print(f"Entering setting shared state")
+        # print(f"Entering setting shared state")
         shared_state = ALL_STATES[self._shared_state_code.item()]
-        print(f"After setting shared state - shared_state - ", shared_state)
+        # print(f"After setting shared state - shared_state - ", shared_state)
         return self._state_cache.get(shared_state, shared_state)
 
     @_state.setter

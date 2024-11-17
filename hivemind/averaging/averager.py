@@ -272,8 +272,6 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
     def _run_internal(self):
         """Serve DecentralizedAverager forever. This function will not return until the averager is shut down"""
-        torch.set_num_threads(1)  # Prevent threading issues
-        torch.manual_seed(0)  # Ensure reproducibility
         loop = switch_to_uvloop()
         # initialize asyncio synchronization primitives in this event loop
 
