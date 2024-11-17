@@ -88,9 +88,13 @@ class MPFuture(base.Future, Generic[ResultType]):
     def __init__(self, *, use_lock: bool = True):
         print(f"Initializing MPFuture")
         self._maybe_initialize_mpfuture_backend()
+        print(f"After self._maybe_initialize_mpfuture_backend()")
 
         self._origin_pid, self._uid = os.getpid(), uuid.uuid4().int
+        print(f"_origin_pid assigned: {self._origin_pid}")
+        print(f"_uid assigned: {self._uid}")
         self._shared_state_code = SharedBytes.next()
+        print(f"_shared_state_code assigned: {self._shared_state_code}")
         self._state_cache: Dict[State, State] = {}
         # mapping from global to cached local future used that makes updates immediately
         # available on setter side; dictionary-based cache works because future can visit any state at most once
@@ -109,12 +113,40 @@ class MPFuture(base.Future, Generic[ResultType]):
         except RuntimeError:
             self._loop, self._aio_event = None, None
 
+    # @property
+    # def _state(self) -> State:
+    #     # print(f"Entering setting shared state")
+    #     shared_state = ALL_STATES[self._shared_state_code.item()]
+    #     # print(f"After setting shared state - shared_state - ", shared_state)
+    #     return self._state_cache.get(shared_state, shared_state)
+
     @property
     def _state(self) -> State:
-        # print(f"Entering setting shared state")
-        shared_state = ALL_STATES[self._shared_state_code.item()]
-        # print(f"After setting shared state - shared_state - ", shared_state)
-        return self._state_cache.get(shared_state, shared_state)
+        try:
+            shared_state_code = self._shared_state_code.item()
+            print(f"Retrieved shared state code: {shared_state_code}")
+            
+            shared_state = ALL_STATES[shared_state_code]
+            print(f"Mapped shared state: {shared_state}")
+            
+            result = self._state_cache.get(shared_state, shared_state)
+            print(f"Final state retrieved: {result}")
+            
+            return result
+            
+        except AttributeError as e:
+            print(f"AttributeError accessing _shared_state_code: {str(e)}")
+            raise
+            
+        except KeyError as e:
+            print(f"Invalid state code {shared_state_code} not found in ALL_STATES")
+            logger.exception("State lookup failed")
+            raise
+            
+        except Exception as e:
+            print(f"Unexpected error in _state property: {str(e)}")
+            logger.exception("Critical state error")
+            raise
 
     @_state.setter
     def _state(self, new_state: State):
@@ -148,7 +180,7 @@ class MPFuture(base.Future, Generic[ResultType]):
             with MPFuture._initialization_lock:
                 if pid != MPFuture._active_pid:
                     # note: the second if is intentional, see https://en.wikipedia.org/wiki/Double-checked_locking
-                    logger.debug(f"Initializing MPFuture backend for pid {pid}")
+                    print(f"Initializing MPFuture backend for pid {pid}")
 
                     receiver_pipe, cls._global_sender_pipe = mp.Pipe(duplex=False)
                     cls._active_pid, cls._active_futures = pid, {}
