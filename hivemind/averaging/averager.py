@@ -209,7 +209,9 @@ class DecentralizedAverager(mp.Process, ServicerBase):
         self.state_compression = state_compression
         self.tensor_infos = tensor_infos
 
+        print(f"Before initializing MPFuture at line 212")
         self._ready = MPFuture()
+        print(f"After initializing MPFuture at line 214")
         # note: we create a background thread weakref and with daemon=True to ensure garbage collection
         background_fetcher = threading.Thread(
             daemon=True,
@@ -402,6 +404,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
         user_data_for_gather = self.serializer.dumps(gather)  # serialize here to avoid imports in the averager process
         data_for_gather = self.serializer.dumps([self.bandwidth, self.mode.value, user_data_for_gather])
+        print(f"Calling StepControl inside step method")
         step = StepControl(
             scheduled_time=scheduled_time,
             deadline=deadline,
@@ -410,7 +413,9 @@ class DecentralizedAverager(mp.Process, ServicerBase):
             data_for_gather=data_for_gather,
         )
 
+        print(f"Before initializing MPFuture at line 416")
         future_for_init = MPFuture()
+        print(f"After initializing MPFuture at line 418")
         self._outer_pipe.send(("_step", [], dict(step=step, future_for_init=future_for_init)))
         step.attach(*future_for_init.result())
 
@@ -420,7 +425,9 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
     async def _step(self, *, step: StepControl, future_for_init: MPFuture):
         try:
+            print(f"Before initializing MPFuture at line 428")
             trigger, cancel = MPFuture(), MPFuture()
+            print(f"After initializing MPFuture at line 430")
             step.attach(trigger, cancel)
             future_for_init.set_result((trigger, cancel))
 
@@ -667,7 +674,9 @@ class DecentralizedAverager(mp.Process, ServicerBase):
     async def _get_current_state_from_host_process(self):
         """Executed in the averager process inside rpc_download_state"""
         print(f"Entering inside _get_current_state_from_host_process method")
+        print(f"Before initializing MPFuture at line 677")
         future = MPFuture()
+        print(f"After initializing MPFuture at line 679")
         self._inner_pipe.send(("_TRIGGER_GET_CURRENT_STATE", future))
         return await future
 
@@ -684,7 +693,9 @@ class DecentralizedAverager(mp.Process, ServicerBase):
         The exact contents of both metadata and tensors are determined by get_current_state method
         """
         print(f"Entering averager - load_state_from_peers()")
+        print(f"Before initializing MPFuture at line 696")
         future = MPFuture()
+        print(f"After initializing MPFuture at line 698")
         self._outer_pipe.send(("_load_state_from_peers", [], dict(timeout=timeout, future=future)))
         return future.result(timeout=timeout) if wait else future
 
@@ -768,7 +779,9 @@ class DecentralizedAverager(mp.Process, ServicerBase):
         :param wait: if True, return bits immediately. Otherwise return awaitable MPFuture
         :returns: averager's current group key bits (without prefix)
         """
+        print(f"Before initializing MPFuture at line 782")
         future = MPFuture()
+        print(f"After initializing MPFuture at line 784")
         self._outer_pipe.send(("_get_group_bits", [], dict(future=future)))
         return future.result() if wait else future
 
@@ -780,7 +793,9 @@ class DecentralizedAverager(mp.Process, ServicerBase):
         :param group_bits: group bits (string of '0' or '1') to be used in averager's group key
         :param wait: if True, wait until the update is confirmed by the averager. Otherwise return immediately
         """
+        print(f"Before initializing MPFuture at line 796")
         future = MPFuture()
+        print(f"After initializing MPFuture at line 798")
         assert all(bit in "01" for bit in group_bits)
         self._outer_pipe.send(("_set_group_bits", [], dict(group_bits=group_bits, future=future)))
         return future.result() if wait else future

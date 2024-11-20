@@ -284,6 +284,7 @@ class MPFuture(base.Future, Generic[ResultType]):
             )
 
     def result(self, timeout: Optional[float] = None) -> ResultType:
+        print(f"Entering result method")
         if self._state not in TERMINAL_STATES:
             if os.getpid() != self._origin_pid:
                 raise RuntimeError("Only the process that created MPFuture can await result")
@@ -334,6 +335,7 @@ class MPFuture(base.Future, Generic[ResultType]):
             self._aio_event.set()
 
     def __getstate__(self):
+        print(f"Entering MPFuture __getstate__ method")
         return dict(
             _sender_pipe=self._sender_pipe,
             _shared_state_code=ForkingPickler.dumps(self._shared_state_code).tobytes(),
@@ -345,7 +347,7 @@ class MPFuture(base.Future, Generic[ResultType]):
         )
 
     def __setstate__(self, state):
-        print(f"Entering __setstate__ method")
+        print(f"Entering MPFuture __setstate__ method")
         self._sender_pipe = state["_sender_pipe"]
         try:
             print(f"Entering __setstate__ try block")
