@@ -123,6 +123,7 @@ class MPFuture(base.Future, Generic[ResultType]):
     @property
     def _state(self) -> State:
         try:
+            print(f"_shared_state_code in _state method: {self._shared_state_code}")
             shared_state_code = self._shared_state_code.item()
             print(f"Retrieved shared state code: {shared_state_code}")
             
@@ -175,6 +176,7 @@ class MPFuture(base.Future, Generic[ResultType]):
 
     @classmethod
     def _maybe_initialize_mpfuture_backend(cls):
+        print(f"Entering inside _maybe_initialize_mpfuture_backend block")
         pid = os.getpid()
         if pid != MPFuture._active_pid:
             with MPFuture._initialization_lock:
@@ -343,14 +345,18 @@ class MPFuture(base.Future, Generic[ResultType]):
         )
 
     def __setstate__(self, state):
+        print(f"Entering __setstate__ method")
         self._sender_pipe = state["_sender_pipe"]
         try:
+            print(f"Entering __setstate__ try block")
             self._shared_state_code = ForkingPickler.loads(state["_shared_state_code"])
+            print(f"_shared_state_code assigned in setstate: {self._shared_state_code}")
         except RuntimeError:
             # If the origin process garbage-collects all instances of MPFuture using the same shmem buffer,
             # the underlying buffer is freed, and we will get RuntimeError ("unable to open shared memory object")
             # here since it is not possible to connect to this buffer anymore. To address this, we just replace
             # the buffer with a non-shared tensor since the origin process doesn't care about our state anymore.
+            print(f"Entering __setstate__ except block")
             self._shared_state_code = torch.tensor([ALL_STATES.index(base.PENDING)], dtype=torch.uint8)
         self._origin_pid, self._uid = state["_origin_pid"], state["_uid"]
         self._result, self._exception = state["_result"], state["_exception"]

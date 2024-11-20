@@ -635,19 +635,24 @@ class DecentralizedAverager(mp.Process, ServicerBase):
          - serialized_metadata is a small serialized bytestring meant to store scalars and hyperparameters
          - tensors is a sequence of pytorch tensors that represent model parameters or optimizer statistics
         """
+        print(f"Entering inside rpc_download_state method")
         if not self.allow_state_sharing:
+            print(f"Entering inside rpc_download_state method - if not self.allow_state_sharing block")
             return  # deny request and direct peer to the next prospective averager
         metadata, tensors, infos = await self._get_current_state_from_host_process()
         if infos is None:
+            print(f"Entering inside infos is None block")
             infos = [CompressionInfo.from_tensor(tensor, key=i) for i, tensor in enumerate(tensors)]
         assert len(tensors) == len(infos)
 
         for tensor, info in zip(tensors, infos):
             for part in split_for_streaming(self.state_compression.compress(tensor, info, allow_inplace=False)):
                 if metadata is not None:
+                    print(f"Entering inside metadata is not None block")
                     yield averaging_pb2.DownloadData(tensor_part=part, metadata=metadata)
                     metadata = None
                 else:
+                    print(f"Entering inside metadata is None block")
                     yield averaging_pb2.DownloadData(tensor_part=part)
 
     def get_current_state(self) -> Tuple[Any, Sequence[torch.Tensor], Sequence[CompressionInfo]]:
@@ -661,6 +666,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
     async def _get_current_state_from_host_process(self):
         """Executed in the averager process inside rpc_download_state"""
+        print(f"Entering inside _get_current_state_from_host_process method")
         future = MPFuture()
         self._inner_pipe.send(("_TRIGGER_GET_CURRENT_STATE", future))
         return await future
@@ -718,6 +724,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
                         print(f"After _load_state_from_peers() impl - rpc_download_state")
                         print("Going to sleep for 15 sec - check first peer")
                         time.sleep(15)
+                        print(f"Timeout value present in aiter_with_timeout method : {timeout}")
 
                         # TODO merge this with hivemind.compression.deserialize_tensor_stream
                         async for message in aiter_with_timeout(stream, timeout=timeout):
@@ -735,6 +742,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
                             current_tensor_parts.append(message.tensor_part)
                             print(f"Appended new tensor part. Current parts: {len(current_tensor_parts)}")
                         if current_tensor_parts:
+                            print(f"Entering current_tensor_parts block")
                             tensors.append(deserialize_torch_tensor(combine_from_streaming(current_tensor_parts)))
                             print(f"Final tensor added. Total tensors processed: {len(tensors)}")
 
