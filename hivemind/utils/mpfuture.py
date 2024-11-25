@@ -53,7 +53,9 @@ class SharedBytes:
                 cls._index = 0
 
             cls._index += 1
-            return cls._buffer[cls._index - 1]
+            result = cls._buffer[cls._index - 1]
+            print(f"SharedBytes.next() -> {result}")
+            return result
 
 class UpdateType(Enum):
     RESULT = auto()
@@ -123,8 +125,13 @@ class MPFuture(base.Future, Generic[ResultType]):
     @property
     def _state(self) -> State:
         try:
+            if self._shared_state_code.numel() != 1:
+                print(f"Expected a single-element tensor for _shared_state_code.")
+                raise ValueError("Expected a single-element tensor for _shared_state_code.")
+    
             print(f"_shared_state_code in _state method: {self._shared_state_code}")
-            shared_state_code = self._shared_state_code.item()
+            #shared_state_code = self._shared_state_code.item()
+            shared_state_code = int(self._shared_state_code[...]) 
             print(f"Retrieved shared state code: {shared_state_code}")
             
             shared_state = ALL_STATES[shared_state_code]
