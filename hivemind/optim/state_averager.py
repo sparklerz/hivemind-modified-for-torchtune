@@ -364,12 +364,14 @@ class TrainingStateAverager(DecentralizedAverager):
           (default in PyTorch 2.0+)
         :param averaging_opts: a dict of keyword arguments forwarded into averaging round
         """
+        print("Entering state_averager.step()")
         if delay_averaging is None:
             delay_averaging = delay_optimizer_step
         should_wait = averaging_round or optimizer_step or zero_grad if self.delta_rule_averaging else averaging_round
         if wait_for_delayed_updates is None:
             wait_for_delayed_updates = should_wait
         if should_wait and not (wait_for_delayed_updates and apply_delayed_updates):
+            print("Should wait for background operation to finish before scheduling new one")
             raise ValueError("Should wait for background operation to finish before scheduling new one")
         assert not delay_optimizer_step or delay_averaging, "Delayed optimizer step requires delayed averaging"
         if delay_optimizer_step:
@@ -395,7 +397,7 @@ class TrainingStateAverager(DecentralizedAverager):
             for pending_update in self.pending_updates:
                 try:
                     timeout = (averaging_opts or {}).get("averaging_timeout", self._allreduce_timeout)
-                    logger.log(self.status_loglevel, "Waiting for delayed updates to finish...")
+                    print(self.status_loglevel, "Waiting for delayed updates to finish...")
                     output = pending_update.result(timeout)
                 except BaseException:
                     # exception will be reported below
@@ -407,7 +409,7 @@ class TrainingStateAverager(DecentralizedAverager):
         self.pending_updates = {pending_update for pending_update in self.pending_updates if not pending_update.done()}
         for finished_update in finished_updates:
             if finished_update.cancelled() or finished_update.exception():
-                logger.log(self.status_loglevel, f"Background update failed: {finished_update}")
+                print(self.status_loglevel, f"Background update failed: {finished_update}")
 
         if apply_delayed_updates:
             if self.finished_averaging_round.is_set():
@@ -415,13 +417,13 @@ class TrainingStateAverager(DecentralizedAverager):
                     self._apply_averaging_results_()
                 if self.offload_optimizer and not self.finished_optimizer_step.is_set():
                     self._apply_optimizer_parameters_()
-                logger.log(self.status_loglevel, "Received parameters from background averaging round")
+                print(self.status_loglevel, "Received parameters from background averaging round")
                 self.finished_averaging_round.clear()
 
             if self.finished_optimizer_step.is_set():
                 if self.offload_optimizer:
                     self._apply_optimizer_parameters_()
-                logger.debug("Received parameters from background optimizer step")
+                print("Received parameters from background optimizer step")
                 self.finished_optimizer_step.clear()
 
         if increment_epoch:
@@ -452,7 +454,7 @@ class TrainingStateAverager(DecentralizedAverager):
                 self.finished_optimizer_step.clear()
                 if self.offload_optimizer and not should_await_averaging:
                     self._apply_optimizer_parameters_()
-                logger.debug("Finished optimizer step")
+                print("Finished optimizer step")
 
             if should_await_averaging:
                 self.finished_averaging_round.wait()
@@ -461,7 +463,7 @@ class TrainingStateAverager(DecentralizedAverager):
                     self._apply_averaging_results_()
                 if self.offload_optimizer:
                     self._apply_optimizer_parameters_()
-                logger.log(self.status_loglevel, "Finished averaging round")
+                print(self.status_loglevel, "Finished averaging round")
 
             async_averaging = averaging_round and delay_averaging
             async_optimizer = (optimizer_step or zero_grad) and delay_optimizer_step
