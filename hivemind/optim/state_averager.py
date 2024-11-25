@@ -366,24 +366,31 @@ class TrainingStateAverager(DecentralizedAverager):
         """
         print("Entering state_averager.step()")
         if delay_averaging is None:
+            print("Entering delay_averaging is None")
             delay_averaging = delay_optimizer_step
         should_wait = averaging_round or optimizer_step or zero_grad if self.delta_rule_averaging else averaging_round
+        print(f"Value of should_wait : {should_wait}")
         if wait_for_delayed_updates is None:
+            print("Entering wait_for_delayed_updates is None")
             wait_for_delayed_updates = should_wait
         if should_wait and not (wait_for_delayed_updates and apply_delayed_updates):
             print("Should wait for background operation to finish before scheduling new one")
             raise ValueError("Should wait for background operation to finish before scheduling new one")
         assert not delay_optimizer_step or delay_averaging, "Delayed optimizer step requires delayed averaging"
         if delay_optimizer_step:
+            print("Entering delay_optimizer_step is True")
             assert self.offload_optimizer, "Delayed optimizer step is only available with offload_optimizer"
             assert not averaging_round or delay_averaging, "Averaging after delayed optimizer should also be delayed"
         if averaging_opts and not averaging_round:
-            logger.warning(f"Averaging parameters not used because averaging_round=False: {averaging_opts}")
+            print(f"Averaging parameters not used because averaging_round=False: {averaging_opts}")
         if averaging_control is not None:
+            print("Entering averaging_control is not None")
             assert averaging_round, "averaging_control is unused if averaging_round is not performed"
         if wait_for_trigger is not None:
+            print("Entering wait_for_trigger is not None")
             assert optimizer_step or zero_grad or averaging_round, "trigger is only used for updating parameters"
             if not (self.reuse_tensors or self.custom_gradients):
+                print("Entering not (self.reuse_tensors or self.custom_gradients)")
                 # averager was asked to wait_for_trigger in background, but it is not clear which version of gradients
                 # should be used for optimizer step (e.g. the gradients that were present during the call to .step or
                 # the possibly different gradients when wait_for_trigger has finished).
@@ -394,6 +401,7 @@ class TrainingStateAverager(DecentralizedAverager):
         output = None
 
         if wait_for_delayed_updates:
+            print("Entering wait_for_delayed_updates")
             for pending_update in self.pending_updates:
                 try:
                     timeout = (averaging_opts or {}).get("averaging_timeout", self._allreduce_timeout)
@@ -406,6 +414,7 @@ class TrainingStateAverager(DecentralizedAverager):
 
         # remove finished updates, log any exceptions
         finished_updates = {pending_update for pending_update in self.pending_updates if pending_update.done()}
+        print(f"Value of finished_updates : {finished_updates}")
         self.pending_updates = {pending_update for pending_update in self.pending_updates if not pending_update.done()}
         for finished_update in finished_updates:
             if finished_update.cancelled() or finished_update.exception():
@@ -429,6 +438,8 @@ class TrainingStateAverager(DecentralizedAverager):
         if increment_epoch:
             self.local_epoch += 1
 
+        print(f"Value of optimizer_step: {optimizer_step}, zero_grad: {zero_grad}, averaging_round: {averaging_round}")      
+
         if optimizer_step or zero_grad or averaging_round:
             if self.offload_optimizer and not self.custom_gradients:
                 self._load_local_grads_into_optimizer_()
@@ -447,7 +458,9 @@ class TrainingStateAverager(DecentralizedAverager):
             self.pending_updates.add(pending_update)
 
             should_await_optimizer = (optimizer_step or zero_grad) and not delay_optimizer_step
+            print(f"Value of should_await_optimizer : {should_await_optimizer}")
             should_await_averaging = averaging_round and not delay_averaging
+            print(f"Value of should_await_averaging : {should_await_averaging}")
 
             if should_await_optimizer:
                 self.finished_optimizer_step.wait()
