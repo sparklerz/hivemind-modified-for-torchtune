@@ -463,9 +463,12 @@ class TrainingStateAverager(DecentralizedAverager):
             print(f"Value of should_await_averaging : {should_await_averaging}")
 
             if should_await_optimizer:
+                print(f"Getting to finished_optimizer_step.wait")
                 self.finished_optimizer_step.wait()
+                print(f"Getting to finished_optimizer_step.clear")
                 self.finished_optimizer_step.clear()
                 if self.offload_optimizer and not should_await_averaging:
+                    print(f"Getting to_apply_optimizer_parameters_()")
                     self._apply_optimizer_parameters_()
                 print("Finished optimizer step")
 
@@ -602,11 +605,16 @@ class TrainingStateAverager(DecentralizedAverager):
     @torch.no_grad()
     def _apply_optimizer_parameters_(self):
         """Copy parameters from offloaded optimizer to the main model"""
+        print(f"Entering _apply_optimizer_parameters_ method")
         assert self.offload_optimizer, "Applying offloaded optimizer updates requires offloaded optimizer"
+        print("Getting offloaded parameters from optimizer")
         offloaded_parameters = [param for group in self.optimizer.param_groups for param in group["params"]]
+        print(f"Comparing lengths: offloaded_parameters={len(offloaded_parameters)}, main_parameters={len(self.main_parameters)}")
         assert len(offloaded_parameters) == len(self.main_parameters), "Optimizer parameters changed during training"
+        print("Starting parameter copy loop")
         for main_param, offloaded_param in zip(self.main_parameters, offloaded_parameters):
             main_param.copy_(offloaded_param, non_blocking=True)
+        print("Successfully completed parameter copy")
 
     @torch.no_grad()
     def _load_local_tensors_into_averager_(self):
