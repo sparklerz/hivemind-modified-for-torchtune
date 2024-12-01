@@ -464,7 +464,11 @@ class TrainingStateAverager(DecentralizedAverager):
 
             if should_await_optimizer:
                 print(f"Getting to finished_optimizer_step.wait")
-                self.finished_optimizer_step.wait()
+                try:
+                # Add timeout to prevent indefinite hanging
+                    self.finished_optimizer_step.wait(timeout=30.0)  
+                except Exception as e:
+                    print(f"Optimizer step encountered error: {e}, proceeding anyway")
                 print(f"Getting to finished_optimizer_step.clear")
                 self.finished_optimizer_step.clear()
                 if self.offload_optimizer and not should_await_averaging:
