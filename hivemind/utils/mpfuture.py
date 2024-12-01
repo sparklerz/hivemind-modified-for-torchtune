@@ -130,8 +130,8 @@ class MPFuture(base.Future, Generic[ResultType]):
                 raise ValueError("Expected a single-element tensor for _shared_state_code.")
     
             #print(f"_shared_state_code in _state method: {self._shared_state_code}")
-            #shared_state_code = self._shared_state_code.item()
-            shared_state_code = int(self._shared_state_code[...]) 
+            shared_state_code = self._shared_state_code.item()
+            #shared_state_code = int(self._shared_state_code[...]) 
             #print(f"Retrieved shared state code: {shared_state_code}")
             
             shared_state = ALL_STATES[shared_state_code]
