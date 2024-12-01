@@ -659,7 +659,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
                     yield averaging_pb2.DownloadData(tensor_part=part, metadata=metadata)
                     metadata = None
                 else:
-                    print(f"Entering inside metadata is None block")
+                    #print(f"Entering inside metadata is None block")
                     yield averaging_pb2.DownloadData(tensor_part=part)
 
     def get_current_state(self) -> Tuple[Any, Sequence[torch.Tensor], Sequence[CompressionInfo]]:
@@ -739,7 +739,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
                         # TODO merge this with hivemind.compression.deserialize_tensor_stream
                         async for message in aiter_with_timeout(stream, timeout=timeout):
-                            print(f"Received new message from stream")
+                            #print(f"Received new message from stream")
                             if message.metadata:
                                 metadata = self.serializer.loads(message.metadata)
                                 print(f"Metadata received: {metadata}")
@@ -751,7 +751,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
                                 print(f"Added tensor to list. Total tensors: {len(tensors)}")
                                 current_tensor_parts = []
                             current_tensor_parts.append(message.tensor_part)
-                            print(f"Appended new tensor part. Current parts: {len(current_tensor_parts)}")
+                            #print(f"Appended new tensor part. Current parts: {len(current_tensor_parts)}")
                         if current_tensor_parts:
                             print(f"Entering current_tensor_parts block")
                             tensors.append(deserialize_torch_tensor(combine_from_streaming(current_tensor_parts)))
