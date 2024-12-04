@@ -735,17 +735,18 @@ class DecentralizedAverager(mp.Process, ServicerBase):
                         print(f"After _load_state_from_peers() impl - rpc_download_state")
                         print("Going to sleep for 15 sec - check first peer")
                         time.sleep(15)
+                        timeout = 2000
                         print(f"Timeout value present in aiter_with_timeout method : {timeout}")
 
                         # TODO merge this with hivemind.compression.deserialize_tensor_stream
                         async for message in aiter_with_timeout(stream, timeout=timeout):
-                            #print(f"Received new message from stream")
+                            print(f"Received new message from stream")
                             if message.metadata:
                                 metadata = self.serializer.loads(message.metadata)
                                 print(f"Metadata received: {metadata}")
                             if message.tensor_part.dtype and current_tensor_parts:
                                 # tensor_part.dtype indicates the start of the new tensor, so we should wrap up this one
-                                #print(f"Processing tensor part with dtype: {message.tensor_part.dtype}")
+                                print(f"Processing tensor part with dtype: {message.tensor_part.dtype}")
                                 #print(f"Current tensor parts count: {len(current_tensor_parts)}")
                                 tensors.append(deserialize_torch_tensor(combine_from_streaming(current_tensor_parts)))
                                 #print(f"Added tensor to list. Total tensors: {len(tensors)}")
