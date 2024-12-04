@@ -722,19 +722,19 @@ class DecentralizedAverager(mp.Process, ServicerBase):
             for peer in sorted(peer_priority.keys(), key=peer_priority.get, reverse=True):
                 if peer != self.peer_id:
                     t0 = time.monotonic()
-                    print("Going to sleep for 10 sec - check first peer")
-                    time.sleep(10)
+                    # print("Going to sleep for 10 sec - check first peer")
+                    # time.sleep(10)
                     print(f"Downloading parameters from peer {peer}")
                     try:
                         print(f"Entering _load_state_from_peers() impl - try block")
-                        print("Going to sleep for 10 sec - check first peer")
-                        time.sleep(10)
+                        # print("Going to sleep for 10 sec - check first peer")
+                        # time.sleep(10)
                         stub = self.get_stub(self._p2p, peer, namespace=self.prefix)
                         stream = await stub.rpc_download_state(averaging_pb2.DownloadRequest())
                         current_tensor_parts, tensors = [], []
                         print(f"After _load_state_from_peers() impl - rpc_download_state")
-                        print("Going to sleep for 15 sec - check first peer")
-                        time.sleep(15)
+                        # print("Going to sleep for 15 sec - check first peer")
+                        # time.sleep(15)
                         timeout = 2000
                         print(f"Timeout value present in aiter_with_timeout method : {timeout}")
 
