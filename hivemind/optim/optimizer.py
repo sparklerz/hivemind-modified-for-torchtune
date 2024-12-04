@@ -178,7 +178,7 @@ class Optimizer(torch.optim.Optimizer):
         averaging_timeout: Optional[float] = 60.0,
         allreduce_timeout: Optional[float] = None,
         next_chunk_timeout: Optional[float] = None,
-        load_state_timeout: float = 600.0,
+        load_state_timeout: float = 2000.0,
         reuse_grad_buffers: bool = False,
         offload_optimizer: Optional[bool] = None,
         delay_optimizer_step: Optional[bool] = None,
