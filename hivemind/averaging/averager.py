@@ -746,10 +746,10 @@ class DecentralizedAverager(mp.Process, ServicerBase):
                                 print(f"Metadata received: {metadata}")
                             if message.tensor_part.dtype and current_tensor_parts:
                                 # tensor_part.dtype indicates the start of the new tensor, so we should wrap up this one
-                                print(f"Processing tensor part with dtype: {message.tensor_part.dtype}")
+                                #print(f"Processing tensor part with dtype: {message.tensor_part.dtype}")
                                 #print(f"Current tensor parts count: {len(current_tensor_parts)}")
                                 tensors.append(deserialize_torch_tensor(combine_from_streaming(current_tensor_parts)))
-                                #print(f"Added tensor to list. Total tensors: {len(tensors)}")
+                                print(f"Added tensor to list. Total tensors: {len(tensors)}")
                                 current_tensor_parts = []
                             current_tensor_parts.append(message.tensor_part)
                             #print(f"Appended new tensor part. Current parts: {len(current_tensor_parts)}")
