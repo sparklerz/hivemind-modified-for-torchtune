@@ -740,7 +740,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
                         # TODO merge this with hivemind.compression.deserialize_tensor_stream
                         async for message in aiter_with_timeout(stream, timeout=timeout):
-                            print(f"Received new message from stream")
+                            #print(f"Received new message from stream")
                             if message.metadata:
                                 metadata = self.serializer.loads(message.metadata)
                                 print(f"Metadata received: {metadata}")

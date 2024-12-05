@@ -692,10 +692,10 @@ class Optimizer(torch.optim.Optimizer):
         # note: we tag along for the next all-reduce because the run may have already started and cancelling it
         # will cause peers to restart matchmaking and may  stall the entire collaboration for a few seconds.
         print(f"Entering _optimizer.load_state_from_peers()")
-        print("Going to sleep - check first peer")
-        time.sleep(30)
-        print("More 30 secs of sleep")
-        time.sleep(30)
+        # print("Going to sleep - check first peer")
+        # time.sleep(30)
+        # print("More 30 secs of sleep")
+        # time.sleep(30)
         if self.scheduled_grads is not None and not self.scheduled_grads.done():
             self._tag_along_with_zero_weight(self.scheduled_grads)
             self.scheduled_grads = None
