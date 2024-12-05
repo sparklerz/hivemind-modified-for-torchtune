@@ -696,12 +696,14 @@ class DecentralizedAverager(mp.Process, ServicerBase):
         print(f"Before initializing MPFuture at line 696")
         future = MPFuture()
         print(f"After initializing MPFuture at line 698")
-        self._outer_pipe.send(("_load_state_from_peers", [], dict(timeout=timeout, future=future)))
-        return future.result(timeout=timeout) if wait else future
+        # self._outer_pipe.send(("_load_state_from_peers", [], dict(timeout=timeout, future=future)))
+        self._outer_pipe.send(("_load_state_from_peers", [], dict(future=future)))
+        # return future.result(timeout=timeout) if wait else future
+        return future.result() if wait else future
 
     async def _load_state_from_peers(self, future: MPFuture, timeout: Optional[float] = None):
-        if timeout is not None:
-            timeout = self.next_chunk_timeout if self.next_chunk_timeout is not None else self.request_timeout
+        # if timeout is not None:
+        #     timeout = self.next_chunk_timeout if self.next_chunk_timeout is not None else self.request_timeout
         try:
             print(f"Entering averager - _load_state_from_peers() impl")
             key_manager = self._matchmaking.group_key_manager
@@ -735,11 +737,12 @@ class DecentralizedAverager(mp.Process, ServicerBase):
                         print(f"After _load_state_from_peers() impl - rpc_download_state")
                         # print("Going to sleep for 15 sec - check first peer")
                         # time.sleep(15)
-                        timeout = 2000
-                        print(f"Timeout value present in aiter_with_timeout method : {timeout}")
+                        # timeout = 2000
+                        # print(f"Timeout value present in aiter_with_timeout method : {timeout}")
 
                         # TODO merge this with hivemind.compression.deserialize_tensor_stream
-                        async for message in aiter_with_timeout(stream, timeout=timeout):
+                        #async for message in aiter_with_timeout(stream, timeout=timeout):
+                        async for message in aiter_with_timeout(stream):
                             #print(f"Received new message from stream")
                             if message.metadata:
                                 metadata = self.serializer.loads(message.metadata)
