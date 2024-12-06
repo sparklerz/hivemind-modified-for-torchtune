@@ -473,6 +473,8 @@ class Optimizer(torch.optim.Optimizer):
                 and next_epoch % self.average_state_every == 0
                 and not self.state_averager.averaging_in_progress
             )
+            print(f"Value of next_epoch: {next_epoch}, self.average_state_every: {self.average_state_every}")
+            print(f"Value of should_average_state is {should_average_state}")
 
             if should_average_state and self.scheduled_state is not None:
                 if self.scheduled_state.triggered or self.scheduled_state.done():
