@@ -128,7 +128,7 @@ class ProgressTracker(threading.Thread):
     def ready_to_update_epoch(self) -> bool:
         """Whether or not this peer can increment epoch right away."""
         print(f"Value of self.global_epoch: {self.global_epoch}, self.local_progress.epoch: {self.local_progress.epoch}")
-        print(f"Value of self.global_progress.samples_accumulated: {self.global_progress.samples_accumulated}, self.target_batch_size: {self.target_batch_size}")
+        print(f"Value of self.global_progress.samples_accumulated: {self.global_progress.samples_accumulated}, self.target_batch_size: {self.target_batch_size}")#here the summed global batches trained across peers are checked for averaging
         print(f"Value of get_dht_time(): {get_dht_time()}, self.global_progress.eta_next_epoch: {self.global_progress.eta_next_epoch}")
         print(f"Value of first condn: {self.global_epoch > self.local_progress.epoch}, second condn: {self.global_progress.samples_accumulated >= self.target_batch_size}, third condn: {get_dht_time() >= self.global_progress.eta_next_epoch}")
         return (
@@ -159,6 +159,7 @@ class ProgressTracker(threading.Thread):
         extra_samples = samples_accumulated - self.local_progress.samples_accumulated
         if update_global_samples and local_epoch == self.local_progress.epoch == self.global_progress.epoch:
             self.global_progress.samples_accumulated += extra_samples
+            #here the global batches trained across peers are summed and checked for averaging
             # note: the above line can decrease the number of samples, e.g. if forced to reset due to overflow
 
         if extra_samples > 0:
