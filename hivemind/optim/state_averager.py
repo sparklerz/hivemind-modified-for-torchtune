@@ -569,9 +569,9 @@ class TrainingStateAverager(DecentralizedAverager):
                     try:
                         averaging_control.allow_allreduce()
                         gathered = averaging_control.result(timeout=timeout)
-                        logger.log(self.status_loglevel, f"Averaged parameters with {len(gathered)} peers")
+                        print(self.status_loglevel, f"Averaged parameters with {len(gathered)} peers")
                     except BaseException as e:
-                        logger.log(self.status_loglevel, f"Averaging failed with {type(e)}")
+                        print(self.status_loglevel, f"Averaging failed with {type(e)}")
                         gathered = {}
 
                     self.finished_averaging_round.set()
