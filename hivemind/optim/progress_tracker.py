@@ -127,6 +127,10 @@ class ProgressTracker(threading.Thread):
     @property
     def ready_to_update_epoch(self) -> bool:
         """Whether or not this peer can increment epoch right away."""
+        print(f"Value of self.global_epoch: {self.global_epoch}, self.local_progress.epoch: {self.local_progress.epoch}")
+        print(f"Value of self.global_progress.samples_accumulated: {self.global_progress.samples_accumulated}, self.target_batch_size: {self.target_batch_size}")
+        print(f"Value of get_dht_time(): {get_dht_time()}, self.global_progress.eta_next_epoch: {self.global_progress.eta_next_epoch}")
+        print(f"Value of first condn: {self.global_epoch > self.local_progress.epoch}, second condn: {self.global_progress.samples_accumulated >= self.target_batch_size}, third condn: {get_dht_time() >= self.global_progress.eta_next_epoch}")
         return (
             self.global_epoch > self.local_progress.epoch
             or self.global_progress.samples_accumulated >= self.target_batch_size

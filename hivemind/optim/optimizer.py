@@ -434,7 +434,7 @@ class Optimizer(torch.optim.Optimizer):
                     delay_optimizer_step=self.delay_optimizer_step,
                     grad_scaler=grad_scaler,
                 )
-
+        print(f"Value of self.tracker.ready_to_update_epoch: {self.tracker.ready_to_update_epoch}")
         if self.tracker.ready_to_update_epoch:
             self._update_global_epoch(grad_scaler)
 
