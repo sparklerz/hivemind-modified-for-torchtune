@@ -209,9 +209,9 @@ class DecentralizedAverager(mp.Process, ServicerBase):
         self.state_compression = state_compression
         self.tensor_infos = tensor_infos
 
-        print(f"Before initializing MPFuture at line 212")
+        #print(f"Before initializing MPFuture at line 212")
         self._ready = MPFuture()
-        print(f"After initializing MPFuture at line 214")
+        #print(f"After initializing MPFuture at line 214")
         # note: we create a background thread weakref and with daemon=True to ensure garbage collection
         background_fetcher = threading.Thread(
             daemon=True,
@@ -404,7 +404,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
         user_data_for_gather = self.serializer.dumps(gather)  # serialize here to avoid imports in the averager process
         data_for_gather = self.serializer.dumps([self.bandwidth, self.mode.value, user_data_for_gather])
-        print(f"Calling StepControl inside step method")
+        #print(f"Calling StepControl inside step method")
         step = StepControl(
             scheduled_time=scheduled_time,
             deadline=deadline,
@@ -413,9 +413,9 @@ class DecentralizedAverager(mp.Process, ServicerBase):
             data_for_gather=data_for_gather,
         )
 
-        print(f"Before initializing MPFuture at line 416")
+        #print(f"Before initializing MPFuture at line 416")
         future_for_init = MPFuture()
-        print(f"After initializing MPFuture at line 418")
+        #print(f"After initializing MPFuture at line 418")
         self._outer_pipe.send(("_step", [], dict(step=step, future_for_init=future_for_init)))
         step.attach(*future_for_init.result())
 
@@ -425,9 +425,9 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
     async def _step(self, *, step: StepControl, future_for_init: MPFuture):
         try:
-            print(f"Before initializing MPFuture at line 428")
+            #print(f"Before initializing MPFuture at line 428")
             trigger, cancel = MPFuture(), MPFuture()
-            print(f"After initializing MPFuture at line 430")
+            #print(f"After initializing MPFuture at line 430")
             step.attach(trigger, cancel)
             future_for_init.set_result((trigger, cancel))
 
@@ -642,20 +642,20 @@ class DecentralizedAverager(mp.Process, ServicerBase):
          - serialized_metadata is a small serialized bytestring meant to store scalars and hyperparameters
          - tensors is a sequence of pytorch tensors that represent model parameters or optimizer statistics
         """
-        print(f"Entering inside rpc_download_state method")
+        #print(f"Entering inside rpc_download_state method")
         if not self.allow_state_sharing:
-            print(f"Entering inside rpc_download_state method - if not self.allow_state_sharing block")
+            #print(f"Entering inside rpc_download_state method - if not self.allow_state_sharing block")
             return  # deny request and direct peer to the next prospective averager
         metadata, tensors, infos = await self._get_current_state_from_host_process()
         if infos is None:
-            print(f"Entering inside infos is None block")
+            #print(f"Entering inside infos is None block")
             infos = [CompressionInfo.from_tensor(tensor, key=i) for i, tensor in enumerate(tensors)]
         assert len(tensors) == len(infos)
 
         for tensor, info in zip(tensors, infos):
             for part in split_for_streaming(self.state_compression.compress(tensor, info, allow_inplace=False)):
                 if metadata is not None:
-                    print(f"Entering inside metadata is not None block")
+                    #print(f"Entering inside metadata is not None block")
                     yield averaging_pb2.DownloadData(tensor_part=part, metadata=metadata)
                     metadata = None
                 else:
@@ -673,10 +673,10 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
     async def _get_current_state_from_host_process(self):
         """Executed in the averager process inside rpc_download_state"""
-        print(f"Entering inside _get_current_state_from_host_process method")
-        print(f"Before initializing MPFuture at line 677")
+        #print(f"Entering inside _get_current_state_from_host_process method")
+        #print(f"Before initializing MPFuture at line 677")
         future = MPFuture()
-        print(f"After initializing MPFuture at line 679")
+        #print(f"After initializing MPFuture at line 679")
         self._inner_pipe.send(("_TRIGGER_GET_CURRENT_STATE", future))
         return await future
 
@@ -692,10 +692,10 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
         The exact contents of both metadata and tensors are determined by get_current_state method
         """
-        print(f"Entering averager - load_state_from_peers()")
-        print(f"Before initializing MPFuture at line 696")
+        #print(f"Entering averager - load_state_from_peers()")
+        #print(f"Before initializing MPFuture at line 696")
         future = MPFuture()
-        print(f"After initializing MPFuture at line 698")
+        #print(f"After initializing MPFuture at line 698")
         # self._outer_pipe.send(("_load_state_from_peers", [], dict(timeout=timeout, future=future)))
         self._outer_pipe.send(("_load_state_from_peers", [], dict(future=future)))
         # return future.result(timeout=timeout) if wait else future
@@ -705,7 +705,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
         # if timeout is not None:
         #     timeout = self.next_chunk_timeout if self.next_chunk_timeout is not None else self.request_timeout
         try:
-            print(f"Entering averager - _load_state_from_peers() impl")
+            #print(f"Entering averager - _load_state_from_peers() impl")
             key_manager = self._matchmaking.group_key_manager
             peer_priority, _ = self.dht.get(f"{key_manager.prefix}.all_averagers", latest=True) or ({}, None)
             peer_priority = {
@@ -716,7 +716,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
             if not isinstance(peer_priority, dict) or len(peer_priority) == 0:
                 logger.info(f"Averager could not load state from peers: peer dict empty or corrupted {peer_priority}")
-                print(f"At line 700 - future.set_result(None)")
+                #print(f"At line 700 - future.set_result(None)")
                 future.set_result(None)
                 return
 
@@ -728,13 +728,13 @@ class DecentralizedAverager(mp.Process, ServicerBase):
                     # time.sleep(10)
                     print(f"Downloading parameters from peer {peer}")
                     try:
-                        print(f"Entering _load_state_from_peers() impl - try block")
+                        #print(f"Entering _load_state_from_peers() impl - try block")
                         # print("Going to sleep for 10 sec - check first peer")
                         # time.sleep(10)
                         stub = self.get_stub(self._p2p, peer, namespace=self.prefix)
                         stream = await stub.rpc_download_state(averaging_pb2.DownloadRequest())
                         current_tensor_parts, tensors = [], []
-                        print(f"After _load_state_from_peers() impl - rpc_download_state")
+                        #print(f"After _load_state_from_peers() impl - rpc_download_state")
                         # print("Going to sleep for 15 sec - check first peer")
                         # time.sleep(15)
                         # timeout = 2000
@@ -757,7 +757,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
                             current_tensor_parts.append(message.tensor_part)
                             #print(f"Appended new tensor part. Current parts: {len(current_tensor_parts)}")
                         if current_tensor_parts:
-                            print(f"Entering current_tensor_parts block")
+                            #print(f"Entering current_tensor_parts block")
                             tensors.append(deserialize_torch_tensor(combine_from_streaming(current_tensor_parts)))
                             print(f"Final tensor added. Total tensors processed: {len(tensors)}")
 
@@ -767,7 +767,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
                         t1 = time.monotonic()
                         print(f"Finished downloading state in {t1 - t0:.3f}s from {peer}")
-                        print(f"At line 738 - future.set_result((metadata, tensors))")
+                        #print(f"At line 738 - future.set_result((metadata, tensors))")
                         future.set_result((metadata, tensors))
                         return
                     except Exception as e:
@@ -775,7 +775,7 @@ class DecentralizedAverager(mp.Process, ServicerBase):
 
         finally:
             if not future.done():
-                print(f"At line 746 - future.set_result(None)")
+                #print(f"At line 746 - future.set_result(None)")
                 future.set_result(None)
 
     def get_group_bits(self, wait: bool = True):
@@ -783,9 +783,9 @@ class DecentralizedAverager(mp.Process, ServicerBase):
         :param wait: if True, return bits immediately. Otherwise return awaitable MPFuture
         :returns: averager's current group key bits (without prefix)
         """
-        print(f"Before initializing MPFuture at line 782")
+        #print(f"Before initializing MPFuture at line 782")
         future = MPFuture()
-        print(f"After initializing MPFuture at line 784")
+        #print(f"After initializing MPFuture at line 784")
         self._outer_pipe.send(("_get_group_bits", [], dict(future=future)))
         return future.result() if wait else future
 
@@ -797,9 +797,9 @@ class DecentralizedAverager(mp.Process, ServicerBase):
         :param group_bits: group bits (string of '0' or '1') to be used in averager's group key
         :param wait: if True, wait until the update is confirmed by the averager. Otherwise return immediately
         """
-        print(f"Before initializing MPFuture at line 796")
+        #print(f"Before initializing MPFuture at line 796")
         future = MPFuture()
-        print(f"After initializing MPFuture at line 798")
+        #print(f"After initializing MPFuture at line 798")
         assert all(bit in "01" for bit in group_bits)
         self._outer_pipe.send(("_set_group_bits", [], dict(group_bits=group_bits, future=future)))
         return future.result() if wait else future

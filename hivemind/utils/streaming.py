@@ -19,7 +19,7 @@ def split_for_streaming(
     chunk_size_bytes: int = STREAMING_CHUNK_SIZE_BYTES,
 ) -> Iterator[runtime_pb2.Tensor]:
     """Split serialized_tensor into multiple chunks for streaming"""
-    print(f"Entering inside split_for_streaming method")
+    #print(f"Entering inside split_for_streaming method")
     buffer = memoryview(serialized_tensor.buffer)
     num_chunks = len(range(0, len(buffer), chunk_size_bytes))
     yield runtime_pb2.Tensor(

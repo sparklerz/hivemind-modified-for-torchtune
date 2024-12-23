@@ -126,7 +126,7 @@ class MPFuture(base.Future, Generic[ResultType]):
     def _state(self) -> State:
         try:
             if self._shared_state_code.numel() != 1:
-                print(f"Expected a single-element tensor for _shared_state_code.")
+                #print(f"Expected a single-element tensor for _shared_state_code.")
                 raise ValueError("Expected a single-element tensor for _shared_state_code.")
     
             #print(f"_shared_state_code in _state method: {self._shared_state_code}")

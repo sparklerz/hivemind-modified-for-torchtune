@@ -146,7 +146,7 @@ async def amap_in_executor(
 async def aiter_with_timeout(iterable: AsyncIterable[T], timeout: Optional[float]) -> AsyncIterator[T]:
     """Iterate over an async iterable, raise TimeoutError if another portion of data does not arrive within timeout"""
     # based on https://stackoverflow.com/a/50245879
-    print(f"Reaching aiter_with_timeout method")
+    #print(f"Reaching aiter_with_timeout method")
     iterator = iterable.__aiter__()
     while True:
         try:

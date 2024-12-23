@@ -41,7 +41,7 @@ class StepControl(MPFuture):
         weight: float,
         data_for_gather: bytes,
     ):
-        print(f"Entering StepControl init method")
+        #print(f"Entering StepControl init method")
         super().__init__()
         self._data_for_gather, self._deadline, self._allow_retries = data_for_gather, deadline, allow_retries
         self._trigger: Optional[MPFuture] = None
@@ -54,24 +54,24 @@ class StepControl(MPFuture):
         self.scheduled_time = scheduled_time
         self.weight = weight
         self.began_allreduce = False
-        print(f"End of StepControl init method")
+        #print(f"End of StepControl init method")
 
 
     def attach(self, trigger: MPFuture, cancel: MPFuture):
-        print(f"Entering StepControl attach method")
+        #print(f"Entering StepControl attach method")
         assert self._trigger is None and self._cancel is None, "Futures are already attached"
         self._trigger, self._cancel = trigger, cancel
-        print(f"End of StepControl attach method")
+        #print(f"End of StepControl attach method")
 
     def allow_allreduce(self):
         """Allow averager to begin all-reduce when it finds a group. Meant to be triggered by user."""
-        print(f"Entering StepControl allow_allreduce method")
+        #print(f"Entering StepControl allow_allreduce method")
         assert self._trigger is not None, "StepControl does not have an attached trigger"
         if self._trigger.done():
             logger.warning("Trigger is already set")
         else:
             self._trigger.set_result(None)
-        print(f"End of StepControl allow_allreduce method")
+        #print(f"End of StepControl allow_allreduce method")
 
     async def wait_for_trigger(self):
         assert self._trigger is not None, "StepControl does not have an attached trigger"
