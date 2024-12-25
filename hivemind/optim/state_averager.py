@@ -414,7 +414,7 @@ class TrainingStateAverager(DecentralizedAverager):
 
         # remove finished updates, log any exceptions
         finished_updates = {pending_update for pending_update in self.pending_updates if pending_update.done()}
-        print(f"Value of finished_updates : {finished_updates}")
+        #print(f"Value of finished_updates : {finished_updates}")
         self.pending_updates = {pending_update for pending_update in self.pending_updates if not pending_update.done()}
         for finished_update in finished_updates:
             if finished_update.cancelled() or finished_update.exception():
@@ -568,7 +568,7 @@ class TrainingStateAverager(DecentralizedAverager):
                     self.delay_before_averaging.update(task_size=1, interval=time.perf_counter() - start_time)
                     try:
                         averaging_control.allow_allreduce()
-                        gathered = averaging_control.result(timeout=timeout)
+                        gathered = averaging_control.result()
                         print(self.status_loglevel, f"Averaged parameters with {len(gathered)} peers")
                     except BaseException as e:
                         print(self.status_loglevel, f"Averaging failed with {type(e)}")
