@@ -507,6 +507,8 @@ class Optimizer(torch.optim.Optimizer):
             self._should_check_synchronization_on_update = True
             # the above line ensures that peers check for *strict* synchronization once per epoch
 
+            print(f"line 510 - Value of self.client_mode is {self.client_mode}")
+            
             if not self.client_mode:
                 self.state_averager.state_sharing_priority = self.local_epoch
 
@@ -722,6 +724,8 @@ class Optimizer(torch.optim.Optimizer):
 
             self.tracker.report_local_progress(local_epoch=self.local_epoch, samples_accumulated=0)
 
+            print(f"line 727 - Value of self.client_mode is {self.client_mode}")
+            
             if not self.client_mode:
                 self.state_averager.state_sharing_priority = self.local_epoch
 
