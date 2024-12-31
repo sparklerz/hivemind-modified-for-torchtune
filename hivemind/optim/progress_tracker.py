@@ -134,7 +134,7 @@ class ProgressTracker(threading.Thread):
         return (
             self.global_epoch > self.local_progress.epoch
             or self.global_progress.samples_accumulated >= self.target_batch_size
-            or (not self.dht.initial_peers and get_dht_time() >= self.global_progress.eta_next_epoch)
+            or (not self.dht.initial_peers and (get_dht_time() >= self.global_progress.eta_next_epoch))
         )
 
     @property

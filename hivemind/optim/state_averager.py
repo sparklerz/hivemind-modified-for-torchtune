@@ -368,8 +368,10 @@ class TrainingStateAverager(DecentralizedAverager):
         if delay_averaging is None:
             #print("Entering delay_averaging is None")
             delay_averaging = delay_optimizer_step
+        print(f"Value of self.delta_rule_averaging : {self.delta_rule_averaging}, averaging_round : {averaging_round}, optimizer_step : {optimizer_step}, zero_grad : {zero_grad}")
         should_wait = averaging_round or optimizer_step or zero_grad if self.delta_rule_averaging else averaging_round
-        print(f"Value of should_wait : {should_wait}")
+        print(f"should_wait = averaging_round or optimizer_step or zero_grad if self.delta_rule_averaging else averaging_round")
+        print(f"line 374 - Value of should_wait : {should_wait}")
         if wait_for_delayed_updates is None:
             #print("Entering wait_for_delayed_updates is None")
             wait_for_delayed_updates = should_wait
@@ -567,7 +569,9 @@ class TrainingStateAverager(DecentralizedAverager):
 
                     self.delay_before_averaging.update(task_size=1, interval=time.perf_counter() - start_time)
                     try:
+                        print("Entering try block")
                         averaging_control.allow_allreduce()
+                        print("After allreduce step")
                         gathered = averaging_control.result()
                         print(self.status_loglevel, f"Averaged parameters with {len(gathered)} peers")
                     except BaseException as e:
