@@ -368,6 +368,7 @@ class TrainingStateAverager(DecentralizedAverager):
         if delay_averaging is None:
             #print("Entering delay_averaging is None")
             delay_averaging = delay_optimizer_step
+        print()
         print(f"Value of self.delta_rule_averaging : {self.delta_rule_averaging}, averaging_round : {averaging_round}, optimizer_step : {optimizer_step}, zero_grad : {zero_grad}")
         should_wait = averaging_round or optimizer_step or zero_grad if self.delta_rule_averaging else averaging_round
         print(f"should_wait = averaging_round or optimizer_step or zero_grad if self.delta_rule_averaging else averaging_round")
