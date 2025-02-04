@@ -381,19 +381,14 @@ class Optimizer(torch.optim.Optimizer):
         :param grad_scaler: if amp is enabled, this **must** be a hivemind-aware gradient scaler.
         :note: this .step is different from normal pytorch optimizers in several key ways. See __init__ for details.
         """
-        #print("Entering Optimizer.step()")
         if grad_scaler is not None and not isinstance(grad_scaler, GradScaler):
-            #print("hivemind.Optimizer requires a hivemind-aware gradient scaler (hivemind.GradScaler)")
             raise ValueError("hivemind.Optimizer requires a hivemind-aware gradient scaler (hivemind.GradScaler)")
         if self.batch_size_per_step is None and batch_size is None and not self.auxiliary:
-            #print("Please either set batch_size_per_step parameter at init or when calling .step")
             raise ValueError("Please either set batch_size_per_step parameter at init or when calling .step")
         if self.auxiliary and (closure is not None or batch_size is not None or grad_scaler is not None):
-            #print("Auxiliary peers should not have batch size, run closures, or use grad_scaler")
             raise ValueError("Auxiliary peers should not have batch size, run closures, or use grad_scaler")
         batch_size = batch_size if batch_size is not None else self.batch_size_per_step
 
-        #print("Calling state_averager.step() at line 396")
         # if delayed updates finished before step, apply these updates; otherwise do nothing
         self.state_averager.step(apply_delayed_updates=True)
 
@@ -427,7 +422,6 @@ class Optimizer(torch.optim.Optimizer):
                 new_samples_accumulated = self.tracker.local_progress.samples_accumulated + batch_size
                 self.tracker.report_local_progress(self.local_epoch, new_samples_accumulated)
                 self._maybe_schedule_state_averaging()
-                #print("Calling state_averager.step() at line 430")
                 self.state_averager.step(
                     increment_epoch=False,
                     optimizer_step=True,
@@ -450,7 +444,6 @@ class Optimizer(torch.optim.Optimizer):
 
             if self.use_gradient_averaging:
                 print(self.status_loglevel, f"Beginning optimizer step #{self.local_epoch}")
-                #print("Calling state_averager.step() at line 453")
                 if self.delay_optimizer_step:
                     self.state_averager.step(wait_for_delayed_updates=True)
 
@@ -486,7 +479,6 @@ class Optimizer(torch.optim.Optimizer):
                     self.scheduled_state = None
                 self.delay_before_state_averaging.update(task_size=1, interval=time.perf_counter() - _epoch_start_time)
 
-            #print("Calling state_averager.step() at line 487")
             self.state_averager.step(
                 increment_epoch=True,
                 wait_for_trigger=wait_for_trigger,
@@ -695,7 +687,6 @@ class Optimizer(torch.optim.Optimizer):
         """
         # note: we tag along for the next all-reduce because the run may have already started and cancelling it
         # will cause peers to restart matchmaking and may  stall the entire collaboration for a few seconds.
-        #print(f"Entering _optimizer.load_state_from_peers()")
         # print("Going to sleep - check first peer")
         # time.sleep(30)
         # print("More 30 secs of sleep")
@@ -789,7 +780,6 @@ class Optimizer(torch.optim.Optimizer):
     def shutdown(self):
         logger.log(self.status_loglevel, "Sending goodbye to peers...")
         self.tracker.shutdown(self.shutdown_timeout)
-        #print("Calling state_averager.step() at line 786")
         self.state_averager.step(wait_for_delayed_updates=True)
         for scheduled_round in self.scheduled_grads, self.scheduled_state:
             if scheduled_round is not None:
