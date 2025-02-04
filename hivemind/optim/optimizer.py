@@ -422,7 +422,7 @@ class Optimizer(torch.optim.Optimizer):
                 new_samples_accumulated = self.tracker.local_progress.samples_accumulated + batch_size
                 self.tracker.report_local_progress(self.local_epoch, new_samples_accumulated)
                 self._maybe_schedule_state_averaging()
-                
+
                 self.state_averager.step(
                     increment_epoch=False,
                     optimizer_step=True,
