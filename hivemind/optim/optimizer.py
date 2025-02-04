@@ -422,6 +422,7 @@ class Optimizer(torch.optim.Optimizer):
                 new_samples_accumulated = self.tracker.local_progress.samples_accumulated + batch_size
                 self.tracker.report_local_progress(self.local_epoch, new_samples_accumulated)
                 self._maybe_schedule_state_averaging()
+                
                 self.state_averager.step(
                     increment_epoch=False,
                     optimizer_step=True,
@@ -687,10 +688,6 @@ class Optimizer(torch.optim.Optimizer):
         """
         # note: we tag along for the next all-reduce because the run may have already started and cancelling it
         # will cause peers to restart matchmaking and may  stall the entire collaboration for a few seconds.
-        # print("Going to sleep - check first peer")
-        # time.sleep(30)
-        # print("More 30 secs of sleep")
-        # time.sleep(30)
         if self.scheduled_grads is not None and not self.scheduled_grads.done():
             self._tag_along_with_zero_weight(self.scheduled_grads)
             self.scheduled_grads = None

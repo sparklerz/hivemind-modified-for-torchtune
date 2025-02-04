@@ -54,7 +54,6 @@ class StepControl(MPFuture):
         self.weight = weight
         self.began_allreduce = False
 
-
     def attach(self, trigger: MPFuture, cancel: MPFuture):
         assert self._trigger is None and self._cancel is None, "Futures are already attached"
         self._trigger, self._cancel = trigger, cancel

@@ -399,6 +399,7 @@ class TrainingStateAverager(DecentralizedAverager):
             for pending_update in self.pending_updates:
                 try:
                     timeout = (averaging_opts or {}).get("averaging_timeout", self._allreduce_timeout)
+                    logger.log(self.status_loglevel, "Waiting for delayed updates to finish...")
                     output = pending_update.result(timeout)
                 except BaseException:
                     # exception will be reported below
@@ -418,11 +419,13 @@ class TrainingStateAverager(DecentralizedAverager):
                     self._apply_averaging_results_()
                 if self.offload_optimizer and not self.finished_optimizer_step.is_set():
                     self._apply_optimizer_parameters_()
+                logger.log(self.status_loglevel, "Received parameters from background averaging round")
                 self.finished_averaging_round.clear()
 
             if self.finished_optimizer_step.is_set():
                 if self.offload_optimizer:
                     self._apply_optimizer_parameters_()
+                logger.debug("Received parameters from background optimizer step")
                 self.finished_optimizer_step.clear()
 
         if increment_epoch:
@@ -461,6 +464,7 @@ class TrainingStateAverager(DecentralizedAverager):
                 self.finished_optimizer_step.clear()
                 if self.offload_optimizer and not should_await_averaging:
                     self._apply_optimizer_parameters_()
+                logger.debug("Finished optimizer step")
 
             if should_await_averaging:
                 self.finished_averaging_round.wait()

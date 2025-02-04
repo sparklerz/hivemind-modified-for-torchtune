@@ -109,13 +109,6 @@ class MPFuture(base.Future, Generic[ResultType]):
         except RuntimeError:
             self._loop, self._aio_event = None, None
 
-    # @property
-    # def _state(self) -> State:
-    #     # print(f"Entering setting shared state")
-    #     shared_state = ALL_STATES[self._shared_state_code.item()]
-    #     # print(f"After setting shared state - shared_state - ", shared_state)
-    #     return self._state_cache.get(shared_state, shared_state)
-
     @property
     def _state(self) -> State:
         try:
@@ -123,7 +116,6 @@ class MPFuture(base.Future, Generic[ResultType]):
                 raise ValueError("Expected a single-element tensor for _shared_state_code.")
     
             shared_state_code = self._shared_state_code.item()
-            #shared_state_code = int(self._shared_state_code[...])
             
             shared_state = ALL_STATES[shared_state_code]
             
@@ -177,6 +169,7 @@ class MPFuture(base.Future, Generic[ResultType]):
             with MPFuture._initialization_lock:
                 if pid != MPFuture._active_pid:
                     # note: the second if is intentional, see https://en.wikipedia.org/wiki/Double-checked_locking
+                    logger.debug(f"Initializing MPFuture backend for pid {pid}")
 
                     receiver_pipe, cls._global_sender_pipe = mp.Pipe(duplex=False)
                     cls._active_pid, cls._active_futures = pid, {}
@@ -327,18 +320,6 @@ class MPFuture(base.Future, Generic[ResultType]):
         if getattr(self, "_aio_event", None):
             self._aio_event.set()
 
-    # def __getstate__(self):
-    #     print(f"Entering MPFuture __getstate__ method")
-    #     return dict(
-    #         _sender_pipe=self._sender_pipe,
-    #         _shared_state_code=ForkingPickler.dumps(self._shared_state_code).tobytes(),
-    #         _origin_pid=self._origin_pid,
-    #         _uid=self._uid,
-    #         _use_lock=self._use_lock,
-    #         _result=self._result,
-    #         _exception=self._exception,
-    #     )
-
     def __getstate__(self):
         result = dict(
             _sender_pipe=self._sender_pipe,
@@ -349,8 +330,6 @@ class MPFuture(base.Future, Generic[ResultType]):
             _result=self._result,
             _exception=self._exception,
         )
-        # for key, value in result.items():
-        #     print(f"{key}: {value}")
         return result
 
 
